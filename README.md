@@ -55,8 +55,11 @@ Navigate to the project directory and run:
 
 ```bash
 cd ecommerce-app
+
 npm install
 npm install -g knex
+
+change the knexfile.js to your own mysql database
 npx knex migrate:latest
 npx knex seed:run
 ```
