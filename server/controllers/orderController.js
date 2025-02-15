@@ -2,6 +2,50 @@ import knex from "knex";
 import { development } from "../../knexfile.js";
 const db = knex(development);
 
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await db("orders").select(
+      "id",
+      "total_price",
+      "status",
+      "payment_method",
+      "address",
+      "created_at"
+    ); // You can customize the fields
+
+    // Step 2: Get the items for each order
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => {
+        // Fetch order items for this order
+        const orderItems = await db("order_items")
+          .where("order_id", order.id)
+          .join("products", "order_items.product_id", "products.id") // Join with products to get the product details
+          .select(
+            "order_items.product_id",
+            "products.name",
+            "order_items.quantity",
+            "order_items.price"
+          );
+
+        return {
+          orderId: order.id,
+          total_price: order.total_price,
+          status: order.status,
+          payment_method: order.payment_method,
+          address: order.address,
+          order_items: orderItems,
+        };
+      })
+    );
+
+    // Step 3: Send the response
+    res.status(200).json(ordersWithItems);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching orders" });
+  }
+};
+
 // Function to get order history
 export const getOrderHistory = async (req, res) => {
   const userId = req.user.id; // User ID from JWT token, assuming you set it in the middleware
@@ -107,23 +151,22 @@ export async function updateOrderStatus(req, res) {
   const { orderId } = req.params;
   const { status } = req.body; // The new status (Packaging, Shipped, Completed)
 
-  const validStatuses = ["Pending", "Packaging", "Shipped", "Completed"];
+  const validStatuses = ["pending", "cancelled", "completed"];
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: "Invalid status" });
   }
 
   try {
-    const updatedOrder = await db("orders")
-      .where("id", orderId)
-      .update({ status })
-      .returning("*");
+    await db("orders").where("id", orderId).update({ status });
 
-    if (updatedOrder.length === 0) {
+    const updatedOrder = await db("orders").where("id", orderId).first();
+
+    if (!updatedOrder) {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    res.json({ message: "Order status updated", order: updatedOrder[0] });
+    res.json({ message: "Order status updated", order: updatedOrder });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error updating order status" });

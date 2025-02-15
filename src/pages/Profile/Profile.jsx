@@ -8,6 +8,7 @@ const ProfilePage = () => {
   const [historyOrders, setHistoryOrders] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [triger, setTriger] = useState(false);
 
   const navigate = useNavigate();
 
@@ -36,14 +37,21 @@ const ProfilePage = () => {
       .catch((err) => {
         console.log(err);
       });
+  }, []);
 
-    fetch("http://localhost:4000/api/orders/order", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-    })
+  useEffect(() => {
+    fetch(
+      `http://localhost:4000/api/orders${
+        JSON.parse(user)?.role === "admin" ? "" : "/order"
+      }`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      }
+    )
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -56,7 +64,7 @@ const ProfilePage = () => {
       .catch((err) => {
         console.log(err);
       });
-  }, []);
+  }, [triger]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -75,6 +83,34 @@ const ProfilePage = () => {
 
       if (response.ok) {
         alert("Profil berhasil diperbarui!");
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      alert("Error logging in");
+    }
+  };
+
+  const handleUpdateOrder = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/orders/" + selectedOrder?.orderId,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+          body: JSON.stringify({ status: "completed" }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Status berhasil diperbarui!");
+        setIsModalOpen(false);
+        setTriger(!triger);
       } else {
         alert(data.message);
       }
@@ -176,7 +212,6 @@ const ProfilePage = () => {
           <div
             key={item.orderId}
             className="flex items-center justify-between py-2 px-4 rounded-lg border border-gray-300"
-            onClick={() => handleClick(item)}
           >
             <div>
               <h3 className="font-semibold">#order {item.orderId}</h3>
@@ -184,7 +219,10 @@ const ProfilePage = () => {
                 Rp {Number(item.total_price).toLocaleString()}
               </p>
             </div>
-            <button className="bg-blue-500 text-white py-1 px-2 text-sm rounded-md hover:bg-blue-600 transition">
+            <button
+              onClick={() => handleClick(item)}
+              className="bg-blue-500 text-white py-1 px-2 text-sm rounded-md hover:bg-blue-600 transition"
+            >
               Detail
             </button>
           </div>
@@ -213,6 +251,7 @@ const ProfilePage = () => {
                 Total Price: Rp{" "}
                 {Number(selectedOrder.total_price).toLocaleString()}
               </p>
+
               <div className="mt-4">
                 <h3 className="text-lg font-semibold">Order Items:</h3>
                 <ul className="space-y-2">
@@ -227,11 +266,20 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col justify-between">
+            <div className="mt-4 flex flex-col justify-between mb-4">
               <p>Status: {selectedOrder.status}</p>
               <p>Payment Method: {selectedOrder.payment_method}</p>
               <p>Address: {selectedOrder.address}</p>
             </div>
+
+            {selectedOrder.status === "pending" && (
+              <button
+                onClick={handleUpdateOrder}
+                className="bg-blue-500 text-white py-1 px-2 text-sm rounded-md hover:bg-blue-600 transition"
+              >
+                Completed
+              </button>
+            )}
           </div>
         </div>
       )}
