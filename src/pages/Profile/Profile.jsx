@@ -205,7 +205,7 @@ const ProfilePage = () => {
         </div>
       </form>
 
-      <h2 className="text-xl font-semibold mb-2">Riwayat Pesanan</h2>
+      <h2 className="text-xl font-semibold mb-2">Riwayat Pesanan {JSON.parse(user)?.role === "admin" && "Customer"}</h2>
 
       <div className="space-y-2">
         {historyOrders.map((item) => (
