@@ -46,7 +46,7 @@ Before running the project, ensure you have the following installed:
 Clone this repository to your local machine using:
 
 ```bash
-git clone https://github.com/your-username/ecommerce-app.git
+git clone https://github.com/ferdiansyah783/Simple-Eccomerce-Buy-and-Sell.git
 ```
 
 ### 2. Install Dependencies
@@ -54,7 +54,7 @@ git clone https://github.com/your-username/ecommerce-app.git
 Navigate to the project directory and run:
 
 ```bash
-cd ecommerce-app
+cd app-directory
 
 npm install
 npm install -g knex
