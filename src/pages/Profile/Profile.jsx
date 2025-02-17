@@ -272,7 +272,7 @@ const ProfilePage = () => {
               <p>Address: {selectedOrder.address}</p>
             </div>
 
-            {selectedOrder.status === "pending" && (
+            {selectedOrder.status === "pending" && JSON.parse(user)?.role === "admin" && (
               <button
                 onClick={handleUpdateOrder}
                 className="bg-blue-500 text-white py-1 px-2 text-sm rounded-md hover:bg-blue-600 transition"
